@@ -25,7 +25,16 @@ SECRET_KEY = 'django-insecure-os(i4%)dxaxqb(27fgu47fbp93#*%v)^$&&a-$(+5-g^yi&h-*
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+# Add this to your Django settings.py
+ALLOWED_HOSTS = [
+    'lunarexplorerdemo-production.up.railway.app',
+    '127.0.0.1',
+    'localhost'
+]
+
+# For development (remove in production)
+if DEBUG:
+    ALLOWED_HOSTS += ['*'] 
 
 
 # Application definition
