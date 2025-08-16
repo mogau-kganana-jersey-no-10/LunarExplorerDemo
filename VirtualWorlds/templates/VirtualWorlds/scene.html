@@ -3,6 +3,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
+  <meta name = "viewport" content = "width=device-width, initial-scale=1.0">
   <title>Lunar Explorer</title>
   <style>
     body, html { 
@@ -16,6 +17,7 @@
     #container {
       display: flex;
       height: 100vh;
+      flex-direction: row;
     }
     
     #viewer-container {
@@ -81,6 +83,57 @@
 
     #back-button {
       margin-top: 15px;
+    }
+
+    @media(max-width:900px){
+      #container{
+        flex-direction: column;
+      }
+      #viewer-container{
+        height:50vh;
+        border-right:none;
+        border-bottom:1px solid #333;
+      }
+      #info-container{
+        width:100%;
+        min-width:unset;
+        height:50vh;
+        padding:15px;
+      }
+       h2 {
+        font-size: 1.2em;
+      }
+
+      .crater-item {
+        font-size: 0.95em;
+        padding: 8px;
+      }
+
+      .control-btn {
+        padding: 6px 12px;
+        font-size: 0.9em;
+      }
+    }
+
+    @media (max-width: 500px) {
+      #viewer-container {
+        height: 45vh;
+      }
+      #info-container {
+        height: 55vh;
+        padding: 10px;
+      }
+      h2 {
+        font-size: 1.1em;
+      }
+      .crater-item {
+        font-size: 0.85em;
+      }
+      .control-btn {
+        font-size: 0.85em;
+        padding: 5px 10px;
+      }
+    }
     }
   </style>
 </head>
