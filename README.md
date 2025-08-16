@@ -17,16 +17,6 @@ Navigation controls to explore the model
 
 Educational content about lunar geography
 
-Installation / Usage
-
-Download the repository:
-
-Extract the zip
-
-Open scene.html located in learnin_logs/templates/learnin_logs in a web browser.
-
-Interact with the lunar model using mouse or touch controls.
-
 Credits / Acknowledgements
 
     Three.js library for 3D model support
