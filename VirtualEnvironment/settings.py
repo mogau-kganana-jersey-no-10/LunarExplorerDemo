@@ -27,7 +27,7 @@ DEBUG = False
 
 # Add this to your Django settings.py
 ALLOWED_HOSTS = [
- "*"
+ '*'
 ]
 
 # For development (remove in production)
