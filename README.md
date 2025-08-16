@@ -19,12 +19,11 @@ Educational content about lunar geography
 
 Installation / Usage
 
-Clone the repository:
-    git clone <repository-url>
+Download the repository:
+Extract 
+Open scene.html in a web browser.
 
-    Open scene.html in a web browser.
-
-    Interact with the lunar model using mouse or touch controls.
+Interact with the lunar model using mouse or touch controls.
 
 Credits / Acknowledgements
 
