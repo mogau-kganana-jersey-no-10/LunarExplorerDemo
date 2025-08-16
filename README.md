@@ -20,8 +20,10 @@ Educational content about lunar geography
 Installation / Usage
 
 Download the repository:
-Extract 
-Open scene.html in a web browser.
+
+Extract the zip
+
+Open scene.html located in learnin_logs/templates/learnin_logs in a web browser.
 
 Interact with the lunar model using mouse or touch controls.
 
