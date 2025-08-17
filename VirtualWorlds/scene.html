@@ -1,0 +1,365 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Lunar Explorer</title>
+  <style>
+    body, html { 
+      margin: 0; 
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+    }
+    
+    #container {
+      display: flex;
+      height: 100vh;
+    }
+    
+    #viewer-container {
+      flex: 1;
+      position: relative;
+      border-right: 1px solid #333;
+      display: flex;
+    }
+    
+    #info-container {
+      flex:0 0 30%;
+      min-width: 250px;
+      background: #121212;
+      color: white;
+      padding: 2% 3%;
+      box-sizing: border-box;
+      overflow-y: auto;
+    }
+    
+    canvas {
+      flex:1;
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+    
+    .info-section {
+      margin-bottom: 30px;
+    }
+    
+    h2 {
+      color: #4fc3f7;
+      border-bottom: 1px solid #333;
+      padding-bottom: 10px;
+    }
+    
+    .crater-item {
+      background: rgba(255,255,255,0.1);
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    
+    .crater-item:hover {
+      background: rgba(255,255,255,0.2);
+    }
+    
+    #moon-controls {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      display:flex;
+      flex-wrap: wrap;
+      gap:10px;
+      z-index: 100;
+    }
+    
+    .control-btn {
+      background: rgba(0,0,0,0.7);
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      margin-right: 10px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    #back-button {
+      margin-top: 15px;
+    }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <!-- 3D Viewer Section -->
+    <div id="viewer-container">
+      <canvas id="moon-canvas"></canvas>
+      <div id="moon-controls">
+        <button class="control-btn" id="zoom-in">Zoom In</button>
+        <button class="control-btn" id="zoom-out">Zoom Out</button>
+        <button class="control-btn" id="reset-view">Reset View</button>
+      </div>
+    </div>
+    
+    <!-- Information Section -->
+    <div id="info-container">
+      <div id="main-info">
+        <div class="info-section">
+          <h2>Moon Overview</h2>
+          <p>The Moon is Earth's only natural satellite. It has a diameter of 3,474 km (about 27% of Earth's) and orbits at an average distance of 384,400 km.</p>
+          <p>Surface temperature varies from -173°C to 127°C. The Moon's gravitational influence produces Earth's tides.</p>
+        </div>
+        
+        <div class="info-section">
+          <h2>Featured Craters</h2>
+          <div class="crater-item" data-crater="tycho">
+            <h3>Tycho</h3>
+            <p>Young, prominent crater with bright rays. Diameter: 86 km.</p>
+          </div>
+          <div class="crater-item" data-crater="copernicus">
+            <h3>Copernicus</h3>
+            <p>Visible with binoculars. Diameter: 93 km. Age: ~800 million years.</p>
+          </div>
+          <div class="crater-item" data-crater="aristarchus">
+            <h3>Aristarchus</h3>
+            <p>Brightest large formation. Diameter: 40 km. Site of lunar phenomena.</p>
+          </div>
+        </div>
+      </div>
+      
+      <div id="crater-detail" style="display:none;">
+        <h2 id="crater-title"></h2>
+        <p id="crater-description"></p>
+        <button class="control-btn" id="back-button">← Back to Overview</button>
+      </div>
+    </div>
+  </div>
+
+<!-- Three.js Libraries -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
+
+<script>
+  // Initialize Three.js
+  const container = document.getElementById('viewer-container');
+  const canvas = document.getElementById('moon-canvas');
+  const renderer = new THREE.WebGLRenderer({ 
+    canvas, 
+    antialias: true,
+    alpha: true
+  });
+  renderer.setPixelRatio(window.devicePixelRatio);
+  
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x000000);
+  
+  const camera = new THREE.PerspectiveCamera(
+    60, 
+    container.clientWidth / container.clientHeight, 
+    0.1, 
+    1000
+  );
+  camera.position.set(0, 0, 5);
+  
+  // Lighting
+  const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+  scene.add(ambientLight);
+  
+  const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+  directionalLight.position.set(5, 10, 7);
+  scene.add(directionalLight);
+  
+  // Controls
+  const controls = new THREE.OrbitControls(camera, canvas);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.05;
+  controls.minDistance = 2;
+  controls.maxDistance = 20;
+  
+  // Final calibrated crater positions
+  const craterData = {
+    tycho: {
+      name: "Tycho Crater",
+      description: "A prominent lunar impact crater 86 km in diameter. It's estimated to be 108 million years old, making it one of the youngest major features on the Moon. The crater's ray system extends over 1,500 km across the lunar surface.",
+      position: {x: -0.5, y: -0.50, z: 0.74},  // Perfectly calibrated
+      markerOffset: 0.15
+    },
+    copernicus: {
+      name: "Copernicus Crater",
+      description: "This 93 km diameter crater is visible with binoculars. Formed about 800 million years ago, it features terraced walls and central peaks rising about 1.2 km above the crater floor. The crater rays extend over 800 km.",
+      position: {x: 0.68, y: 0.3, z: 0.96},   // Perfectly calibrated
+      markerOffset: 0.15
+    },
+    aristarchus: {
+      name: "Aristarchus Crater",
+      description: "The brightest large formation on the Moon, with a diameter of 40 km. The crater walls rise about 3 km above the floor. This region has been the source of many reported transient lunar phenomena, including glowing reddish spots.",
+      position: {x: 0.15, y: -0.80, z: 0.5},  // Perfectly calibrated
+      markerOffset: 0.15
+    }
+  };
+
+  // Load Moon model
+  const loader = new THREE.GLTFLoader();
+  let moonModel;
+  
+  loader.load(
+    '{% static "models/moon.glb" %}',
+    (gltf) => {
+      moonModel = gltf.scene;
+      moonModel.scale.set(1.0, 1.0, 1.0);
+      scene.add(moonModel);
+      
+      // Add perfectly positioned markers
+      addCraterMarkers();
+    },
+    undefined,
+    (error) => console.error("Error loading model:", error)
+  );
+
+  function addCraterMarkers() {
+    const markerMaterial = new THREE.MeshBasicMaterial({ 
+      color: 0xff0000,
+      transparent: true,
+      opacity: 0.6
+    });
+    
+    Object.values(craterData).forEach(crater => {
+      // Create marker sphere
+      const marker = new THREE.Mesh(
+        new THREE.SphereGeometry(0.08, 16, 16),
+        markerMaterial
+      );
+      
+      // Position marker slightly above actual crater position
+      marker.position.set(
+        crater.position.x,
+        crater.position.y,
+        crater.position.z + crater.markerOffset
+      );
+      
+      // Add pointer arrow pointing down to surface
+      const pointer = new THREE.ArrowHelper(
+        new THREE.Vector3(0, 0, -1),
+        marker.position,
+        crater.markerOffset,
+        0xff0000,
+        0.05,
+        0.03
+      );
+      
+      scene.add(marker);
+      scene.add(pointer);
+    });
+  }
+
+  // UI Interactions
+  document.querySelectorAll('.crater-item').forEach(item => {
+    item.addEventListener('click', function() {
+      const craterId = this.getAttribute('data-crater');
+      showCraterInfo(craterId);
+    });
+  });
+
+  document.getElementById('back-button').addEventListener('click', showMainInfo);
+
+  function showCraterInfo(craterId) {
+    const crater = craterData[craterId];
+    document.getElementById('main-info').style.display = 'none';
+    document.getElementById('crater-detail').style.display = 'block';
+    document.getElementById('crater-title').textContent = crater.name;
+    document.getElementById('crater-description').textContent = crater.description;
+    
+    // Focus on ACTUAL crater position
+    if (moonModel) {
+      const target = new THREE.Vector3(
+        crater.position.x,
+        crater.position.y,
+        crater.position.z
+      );
+      
+      // Calculate optimal camera position
+      const cameraDistance = 2.5;
+      const cameraPosition = new THREE.Vector3()
+        .copy(target)
+        .add(new THREE.Vector3(0, 0, cameraDistance));
+      
+      // Smooth transition using GSAP
+      gsap.to(camera.position, {
+        x: cameraPosition.x,
+        y: cameraPosition.y,
+        z: cameraPosition.z,
+        duration: 1,
+        ease: "power2.inOut"
+      });
+      
+      gsap.to(controls.target, {
+        x: target.x,
+        y: target.y,
+        z: target.z,
+        duration: 1,
+        ease: "power2.inOut",
+        onUpdate: () => controls.update()
+      });
+    }
+  }
+
+  function showMainInfo() {
+    document.getElementById('main-info').style.display = 'block';
+    document.getElementById('crater-detail').style.display = 'none';
+    
+    // Smoothly return to overview position
+    gsap.to(camera.position, {
+      x: 0,
+      y: 0,
+      z: 5,
+      duration: 1,
+      ease: "power2.inOut"
+    });
+    
+    gsap.to(controls.target, {
+      x: 0,
+      y: 0,
+      z: 0,
+      duration: 1,
+      ease: "power2.inOut",
+      onUpdate: () => controls.update()
+    });
+  }
+
+  // Control buttons
+  document.getElementById('zoom-in').addEventListener('click', () => {
+    controls.dollyIn(0.2);
+  });
+  
+  document.getElementById('zoom-out').addEventListener('click', () => {
+    controls.dollyOut(0.2);
+  });
+  
+  document.getElementById('reset-view').addEventListener('click', () => {
+    showMainInfo();
+  });
+  
+  // Handle window resize
+  window.addEventListener('resize', () => {
+    const width = container.clientWidth;
+    const height = container.clientHeight;
+    
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix();
+    renderer.setSize(width, height);
+  });
+  
+  // Animation loop
+  function animate() {
+    requestAnimationFrame(animate);
+    controls.update();
+    renderer.render(scene, camera);
+  }
+  
+  animate();
+</script>
+</body>
+</html>
